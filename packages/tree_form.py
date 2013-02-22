@@ -9,10 +9,8 @@ from django.db.models import Model
 from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext_lazy as _
 
-from django_intranet_stuff.utils.choices import Choices
-
 __all__ = (
-    'FIELD_STATE',
+    'NORMAL', 'REQUIRED', 'READONLY',
     'TreeForm', 'TreeFormField', 'ModelChoiceField', 'MulticModelChoiceField',
     'CharField', 'DateField', 'EmailField', 'BooleanField', 'ChoiceField',
 )
@@ -24,18 +22,16 @@ __all__ = (
     # 'SplitDateTimeField', 'IPAddressField', 'GenericIPAddressField', 'FilePathField',
 # 'SlugField', 'TypedChoiceField', 'TypedMultipleChoiceField'
 
-FIELD_STATE = Choices(
-    REQUIRED = ('required', 'required'),
-    NORMAL = ('normal', 'normal'),
-    READONLY = ('readonly', 'readonly'),
-)
+REQUIRED = 'required'
+NORMAL = 'normal'
+READONLY = 'readonly'
 
 
 class Field(object):
 
     creation_counter = 0
 
-    def __init__(self, label='', state=FIELD_STATE.NORMAL, default='',
+    def __init__(self, label='', state=NORMAL, default='',
                 empty_label=u"---------", help_text='', *args, **kwargs):
 
         super(Field, self).__init__()
@@ -86,8 +82,8 @@ class Field(object):
             'name': name,
             'value': value,
             'help_text': ugettext(self.help_text) if self.help_text else self.help_text,
-            'required': state==FIELD_STATE.REQUIRED,
-            'readonly': state==FIELD_STATE.READONLY,
+            'required': state==REQUIRED,
+            'readonly': state==READONLY,
             'type': self.__class__.__name__,
         }
 
@@ -279,7 +275,7 @@ class BaseTreeForm(object):
         for name, field in self.fields.iteritems():
             old_value = field.value_from_datadict(name, self.initial)
             field_state = self.get_field_state(name)
-            if field_state == FIELD_STATE.READONLY:
+            if field_state == READONLY:
                 self.cleaned_data[name] = old_value
                 continue
             new_value = field.value_from_datadict(name, self.data)
@@ -287,7 +283,7 @@ class BaseTreeForm(object):
             value, has_error, changed = field.clean(
                 new_value=new_value,
                 old_value=old_value,
-                required=field_state==FIELD_STATE.REQUIRED
+                required=field_state==REQUIRED
                 )
 
             self.cleaned_data[name] = value

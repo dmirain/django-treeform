@@ -11,9 +11,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_intranet_stuff.utils.choices import Choices
 
-from staff.lib.forms.fields import MulticModelChoiceField as DjMulticModelChoiceField
-
-
 __all__ = (
     'FIELD_STATE',
     'TreeForm', 'TreeFormField', 'ModelChoiceField', 'MulticModelChoiceField',
@@ -175,31 +172,6 @@ class ModelChoiceField(Field):
         choices = [{'value':v,'name':n} for v,n in choice_gen()]
         field_dict['choices'] = choices
 
-        if isinstance(field_dict['value'], Model):
-            field_dict['value'] = field_dict['value'].pk
-        return field_dict
-
-
-class MulticModelChoiceField(Field):
-    def __init__(self, queryset, *args, **kwargs):
-        super(MulticModelChoiceField, self).__init__(*args, **kwargs)
-        self.queryset = queryset
-
-    def get_dj_field(self, required=False):
-        return DjMulticModelChoiceField(
-            queryset=self.queryset,
-            required=required,
-            *self.args, **self.kwargs)
-
-    def as_dict(self, name, value, state):
-        field_dict = super(MulticModelChoiceField, self).as_dict(
-                                                        name, value, state)
-        dj_field = self.get_dj_field()
-        presentation = dj_field.presentation_function(value) if value else ''
-        field_dict['multic_values'] = {
-            'type': dj_field.multic_type,
-            'value': presentation,
-            }
         if isinstance(field_dict['value'], Model):
             field_dict['value'] = field_dict['value'].pk
         return field_dict
